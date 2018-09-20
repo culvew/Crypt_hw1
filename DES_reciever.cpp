@@ -9,7 +9,7 @@
 #include <cstring>
 #include <cerrno>
 #include <string>
-//THE DIFFERENT PERMUTATIONS
+
 std::vector<int> make_key(int num){
 	std::vector<int>fin(10);
 	for (int i = 0; i < 10; ++i){
@@ -24,10 +24,6 @@ std::vector<int> char_to_vector(char c){
         out[i]=c&1;
         c=c>>1;
     }
-   for (int i = 0; i < 8; ++i)
-   {
-   	// std::cout<<out[i];
-   }
    return out;
 }
 char vector_to_char(std::vector<int> vec){
@@ -49,6 +45,7 @@ std::vector<std::vector<int>> string_to_matrix(std::string str){
 
 	return out;
 }
+//THE DIFFERENT PERMUTATIONS
 void ExP(std::vector<int>&in){
 	in.push_back(in[1]);
 	in.push_back(in[2]);
@@ -282,8 +279,8 @@ int main(int argc, char const *argv[])
 	int S2[4][4]={{0,1,2,3},{2,0,1,3},{3,0,1,0},{2,1,0,3}};
 
 	//sockets and stuff
-	std::vector<int> KEY=make_key(atoi(argv[2]));
-	short p= atoi(argv[3]);
+	std::vector<int> KEY=make_key(atoi(argv[1]));
+	short p= atoi(argv[2]);
 	struct sockaddr_in theresock;
 	struct sockaddr_in mysock;
 	bzero(&mysock, sizeof(mysock));
@@ -293,28 +290,29 @@ int main(int argc, char const *argv[])
 	mysock.sin_addr.s_addr=htonl(INADDR_ANY);
 	int fd=socket(AF_INET,SOCK_STREAM,0);
 	if(bind(fd,(struct sockaddr *) &mysock,sizeof(mysock))==-1){
-		std::cout<<"BIND ERROR "<<errno<<std::endl;
+		perror("Error");
 		return -1;
 	}
 
 	if(listen(fd,10)==-1){
-		std::cout<<"LISTEN ERROR"<<std::endl;
+		perror("Error");
 		return -1;
 	}
 	int theresize;
 	int Therefd=accept(fd,(struct sockaddr *)& theresock,&theresize);
 	char msg[35000];
 	memset(&msg[0], 0, sizeof(msg));
-	int l=read(Therefd,msg,35000);
+	int l=read(Therefd,msg,32768);
 	// std::string crypt(msg);
 	for (int i = 0; i < l; ++i)
 	{
-		std::cout<<"CODED MESSAGE: "<<(int)msg[i]<<std::endl;
+		std::cout<<msg[i];
 	}
-	std::cout<<"Length Recieved: "<<l<<std::endl;
-
-
-	std::string fctxt(msg);
+	std::string fctxt;
+	for (int i = 0; i < l; ++i)
+	{
+		fctxt.push_back(msg[i]);
+	}
 
 	std::vector<std::vector<int>> Cmat=string_to_matrix(fctxt);
 	//Decrypt
