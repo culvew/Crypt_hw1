@@ -9,7 +9,7 @@
 #include <cstring>
 
 
-//THE DIFFERENT PERMUTATIONS
+
 std::vector<int> make_key(int num){
 	std::vector<int>fin(10);
 	for (int i = 0; i < 10; ++i){
@@ -19,20 +19,16 @@ std::vector<int> make_key(int num){
 	return fin;
 }
 std::vector<int> char_to_vector(char c){
+	//convert a char to a vector representation
 	std::vector<int> out(8);
 	for (int i = 7; i >= 0; --i){
         out[i]=c&1;
         c=c>>1;
     }
-   for (int i = 0; i < 8; ++i)
-   {
-   	// std::cout<<out[i];
-   }
    return out;
 }
 char vector_to_char(std::vector<int> vec){
-	// 0,1,0,0,1,0,0,0
-
+	//convert a vector representation back to a char
 	int val=0;
 	for (int i = 0; i < 8; ++i){
 		val+=pow(2,7-i)*vec[i];
@@ -40,15 +36,14 @@ char vector_to_char(std::vector<int> vec){
 	return (char)  val;
 }
 std::vector<std::vector<int>> string_to_matrix(std::string str){
+	//take a c++ string and convert it to a vector of vector binary representation
 	std::vector<std::vector<int>>out;
-
-
 	for (int i = 0; i < str.length(); ++i){
 		out.push_back(char_to_vector(str[i]));
 	}
-
 	return out;
 }
+//THE DIFFERENT PERMUTATIONS
 void ExP(std::vector<int>&in){
 	in.push_back(in[1]);
 	in.push_back(in[2]);
@@ -133,6 +128,7 @@ void left_shift(std::vector<int>&in){
 	in[in.size()]=temp;
 }
 std::vector<int> convert_Sbox(std::vector<int>input, int S[][4]){
+	//run through S-boxes
 	int r=input[0]*2+input[3];
 	int c=input[1]*2+input[2];
 
@@ -146,6 +142,8 @@ std::vector<int> convert_Sbox(std::vector<int>input, int S[][4]){
 	return out;
 }
 std::vector<int> Key_gen(std::vector<int> key,int k1_k2){
+	//generate keys from start key
+
 	//p10 of 10 bit key
 	P10(key);
 	//break into 2 5 bit pieces
@@ -175,7 +173,7 @@ std::vector<int> Key_gen(std::vector<int> key,int k1_k2){
 	left_shift(left);
 	left_shift(right);
 
-	//recombine for key 1.
+	//recombine for key 2.
 	std::vector<int>k2(10);
 	for (int i = 0; i < 5; ++i){		
 		k2[i]=left[i];
@@ -222,6 +220,7 @@ std::vector<int> F_box(std::vector<int> input, std::vector<int> key, int S1[][4]
 	return final;
 }
 std::vector<int> encrypt(std::vector<int> PT,std::vector<int> key,int S1[][4], int S2[][4],bool encrypt){
+	//create the 2 keys
 	std::vector<int>K1;
 	std::vector<int>K2;
 
@@ -233,6 +232,7 @@ std::vector<int> encrypt(std::vector<int> PT,std::vector<int> key,int S1[][4], i
 		K1=Key_gen(key,2);
 		K2=Key_gen(key,1);
 	}
+	//run the Initial Permutation
 	IP(PT);
 	std::vector<int> Left(4);
 	std::vector<int> Right(4);
@@ -241,7 +241,7 @@ std::vector<int> encrypt(std::vector<int> PT,std::vector<int> key,int S1[][4], i
 		Left[i]=PT[i];
 		Right[i]=PT[i+4];
 	}
-
+	//send throught he F-box
 	std::vector<int> out1=F_box(Right,K1,S1,S2);
 	std::vector<int>xor1(4);
 	//xor the 2
@@ -252,7 +252,7 @@ std::vector<int> encrypt(std::vector<int> PT,std::vector<int> key,int S1[][4], i
 		else
 			xor1[i]=1;
 	}
-	
+	//run through second F-box
 	std::vector<int> out2=F_box(xor1,K2,S1,S2);
 	std::vector<int>xor2(4);
 	//second xor
@@ -270,7 +270,7 @@ std::vector<int> encrypt(std::vector<int> PT,std::vector<int> key,int S1[][4], i
 		CT[i]=xor2[i];
 		CT[i+4]=xor1[i];
 	}
-	//run through iIP
+	//run through inverse Initial Permutation
 	iIP(CT);
 	return CT;
 }
@@ -279,7 +279,7 @@ int main(int argc, char const *argv[]){
 	std::vector<int> KEY=make_key(atoi(argv[2]));
 	std::ifstream inFile(argv[1]);
 	if(!inFile.good()){
-		std::cout<<"NO GOOD FILE"<<std::endl;
+		perror("Error");
 		return -1;
 	}
 
@@ -291,7 +291,7 @@ int main(int argc, char const *argv[]){
 	char pc;
 	
 	std::string fptxt;	//full plain txt
-	std::string fctxt;
+	std::string fctxt;	//full cypher txt
 	while(inFile.get(pc)){
 		//set the plain text
 		std::string ptxt;
@@ -302,7 +302,7 @@ int main(int argc, char const *argv[]){
 		for (int i = 0; i < Pmat.size(); ++i){
 			Cmat.push_back(encrypt(Pmat[i],KEY,S1,S2,true));
 		}
-	std::string ctxt;
+		std::string ctxt;
 		for (int i = 0; i < Pmat.size(); ++i){
 			ctxt+=vector_to_char(Cmat[i]);
 		}
@@ -312,39 +312,36 @@ int main(int argc, char const *argv[]){
 
 
 	}
-
 	const char* Cctxt=fctxt.c_str();
-
+	std::cout<<fctxt;
 	//sockets and stuff
 
+	//port
 	short p= atoi(argv[3]);
 	struct sockaddr_in mysock;
 	bzero(&mysock, sizeof(mysock));
 	mysock.sin_family= AF_INET;
 	mysock.sin_port= htons(p);
 	if(inet_pton(AF_INET,argv[4],&mysock.sin_addr)<=0){
-		std::cout<<"UH OH"<<std::endl;
+		perror("Error");
 		return -1;
 	}
 	int fd=socket(AF_INET,SOCK_STREAM,0);
 	if(connect(fd,(struct sockaddr*) &mysock,sizeof(mysock))){
-		perror("uhoh");
+		perror("Error");
 		return -1;
 	}
 
 	//send the whole message
-	int w=write(fd, Cctxt,strlen(Cctxt));
+	int w=write(fd, Cctxt,fptxt.length());
 	if (w==0){
 		std::cout<<"NOTHING WRITTEN"<<std::endl;
 		return -1;
 	}
 	if (w==-1){
-		std::cout<<"WRITE ERROR"<<std::endl;
+		perror("Error");
 		return -1;
 	}
-
-	// std::cout<<fptxt<<std::endl;
-	// std::cout<<fctxt<<std::endl;
 	std::vector<std::vector<int>> Cmat=string_to_matrix(fctxt);
 	//Decrypt
 	std::vector<std::vector<int>> Fmat;
@@ -374,11 +371,5 @@ int main(int argc, char const *argv[]){
 	//print the entire Decrypted Text
 	std::cout<<"DECRYPTED TEXT"<<std::endl;
 	std::cout<<decrypted<<std::endl;
-
-
-	std::cout<<w;
-
-
-
 	return 0;
 }
